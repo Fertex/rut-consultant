@@ -28,8 +28,8 @@ RUN addgroup --gid 1024 pyuser \
 	&& chown -R pyuser /usr/app
 USER pyuser
 
-# Expose port 80
-EXPOSE 80
+# Expose port 4000
+EXPOSE 4000
 
 # Autorun app
 CMD [ "python", "./src/app.py"]
