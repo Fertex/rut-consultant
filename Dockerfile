@@ -1,7 +1,7 @@
 # Base on docker image Justin Ribeiro <justin@justinribeiro.com>
 FROM debian:buster-slim
 LABEL name="Api with selenium" \
-	version="1.0" \
+	version="1.0" 
 
 WORKDIR /src
 
@@ -42,6 +42,5 @@ USER chrome
 # Expose port 4000
 EXPOSE 4000
 
-# Autorun chrome headless with no GPU
-ENTRYPOINT [ "google-chrome" ]
+# Autorun app
 CMD [ "python", "app.py"]
