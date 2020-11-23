@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
 	curl \
 	gnupg \
 	--no-install-recommends \
+	&& curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
 	&& curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
 	&& echo "deb https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
 	&& apt-get update && apt-get install -y \
@@ -28,7 +29,9 @@ RUN apt-get update && apt-get install -y \
 	fonts-freefont-ttf \
 	--no-install-recommends \
 	&& apt-get purge --auto-remove -y curl gnupg \
-	&& rm -rf /var/lib/apt/lists/* \
+	&& rm -rf /var/lib/apt/lists/* 
+
+RUN python get-pip.py \
 	&& pip install -r requirements.txt
 
 # Add Chrome as a user
