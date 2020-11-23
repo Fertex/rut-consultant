@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install -y \
 	&& apt-get purge --auto-remove -y curl gnupg \
 	&& rm -rf /var/lib/apt/lists/* 
 
-RUN python get-pip.py \
+RUN python3.7 get-pip.py \
 	&& pip install --upgrade pip \
 	&& pip install -r requirements.txt
 
