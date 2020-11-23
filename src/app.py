@@ -1,15 +1,20 @@
 __version__ = 0.1
+import sys
 import logging
-from datetime import date
 
 from api import Api
 
 
 def setup_log():
-    logging.basicConfig(filename="log.log".format(date.today()),
-                        level=logging.DEBUG,
-                        filemode='w',
-                        format='%(name)s - %(levelname)s - %(message)s')
+    file_handler = logging.FileHandler(filename="log.log",
+                                       mode='w',
+                                       encoding='utf-8')
+    
+    stdout_handler = logging.StreamHandler(sys.stdout)
+
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(name)s - %(levelname)s - %(message)s',
+                        handlers=[file_handler, stdout_handler])
     logging.debug("Setup was initialized")
 
 
