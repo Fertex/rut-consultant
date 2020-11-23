@@ -28,9 +28,8 @@ RUN apt-get update && apt-get install -y \
 	fonts-freefont-ttf \
 	--no-install-recommends \
 	&& apt-get purge --auto-remove -y curl gnupg \
-	&& rm -rf /var/lib/apt/lists/*
-
-RUN pip install -r requirements.txt
+	&& rm -rf /var/lib/apt/lists/* \
+	&& pip install -r requirements.txt
 
 # Add Chrome as a user
 RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
