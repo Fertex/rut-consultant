@@ -10,6 +10,7 @@ COPY . .
 # Install deps + add Chrome Stable + purge all the things
 RUN apt-get update && apt-get install -y \
 	python3.7 \
+	python3-pip \
 	apt-transport-https \
 	ca-certificates \
 	curl \
@@ -32,9 +33,8 @@ RUN apt-get update && apt-get install -y \
 	&& apt-get purge --auto-remove -y curl gnupg \
 	&& rm -rf /var/lib/apt/lists/* 
 
-RUN python3.7 get-pip.py \
-	&& pip install --upgrade pip \
-	&& pip install -r requirements.txt
+RUN pip3 install --upgrade pip \
+	&& pip3 install -r requirements.txt
 
 # Add Chrome as a user
 RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
