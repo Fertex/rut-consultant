@@ -1,20 +1,11 @@
-import pyodbc
 import sqlite3
-from pyodbc import ProgrammingError
 from pandas.io.sql import read_sql
 
 
 class DbDriver:
 
     def __init__(self, driver, database, server=None, user=None, password=None, port=None):
-        if "SQL Server" in driver:
-            self._conn = pyodbc.connect("DRIVER={};SERVER={};DATABASE={};UID={};PWD={};".format(
-                driver, server, database, user, password))
-        elif "MySQL ODBC" in driver:
-            self._conn = pyodbc.connect(
-                "Driver={};User={};Password={};Server={};Database={};Port={};".format(
-                    driver, user, password, server, database, port))
-        elif "SQLite" in driver:
+        if "SQLite" in driver:
             self._conn = sqlite3.connect(database)
 
         self.cursor = self._conn.cursor()
