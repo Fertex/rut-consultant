@@ -16,9 +16,8 @@ RUN apt-get -y update \
 	google-chrome-stable \
 	unzip
 
-RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/ \
-	&& curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE/chromedriver_linux64.zip \
-	&& unzip /tmp/chromedriver.zip chromedriver -d /usr/app/bin/
+RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/87.0.4280.20/chromedriver_linux64.zip \
+	&& unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
 
 RUN pip install --upgrade pip \
 	&& pip install -r requirements.txt
