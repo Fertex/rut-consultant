@@ -9,6 +9,7 @@ COPY . .
 
 # Install deps + add Chrome Stable + purge all the things
 RUN apt-get update && apt-get install -y \
+	apt-get install python \
 	apt-transport-https \
 	ca-certificates \
 	curl \
