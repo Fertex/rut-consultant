@@ -2,7 +2,7 @@ __version__ = 0.1
 import logging
 from datetime import date
 
-from src.api import Api
+from api import Api
 
 
 def setup_log():
