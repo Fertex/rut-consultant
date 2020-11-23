@@ -3,7 +3,7 @@ FROM debian:buster-slim
 LABEL name="Api with selenium" \
 	version="1.0" 
 
-WORKDIR /src
+WORKDIR /usr/app
 
 COPY . .
 
@@ -48,4 +48,4 @@ USER chrome
 EXPOSE 4000
 
 # Autorun app
-CMD [ "python3", "app.py"]
+CMD [ "python3", "./src/app.py"]
