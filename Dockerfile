@@ -9,7 +9,7 @@ COPY . .
 
 # Install deps + add Chrome Stable + purge all the things
 RUN apt-get update && apt-get install -y \
-	python \
+	python3.7 \
 	apt-transport-https \
 	ca-certificates \
 	curl \
@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y \
 	&& rm -rf /var/lib/apt/lists/* 
 
 RUN python get-pip.py \
+	&& pip install --upgrade pip \
 	&& pip install -r requirements.txt
 
 # Add Chrome as a user
