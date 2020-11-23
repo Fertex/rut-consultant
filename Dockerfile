@@ -1,5 +1,5 @@
-# Base on docker image Justin Ribeiro <justin@justinribeiro.com>
-FROM debian:buster-slim
+# Base on docker image https://nander.cc/using-selenium-within-a-docker-container
+FROM python:3.8
 LABEL name="Api with selenium" \
 	version="1.0" 
 
@@ -7,40 +7,21 @@ WORKDIR /usr/app
 
 COPY . .
 
-# Install deps + add Chrome Stable + purge all the things
-RUN apt-get update && apt-get install -y \
-	python3.7 \
-	python3-pip \
-	python3-setuptools \
-	apt-transport-https \
-	ca-certificates \
-	curl \
-	gnupg \
-	--no-install-recommends \
-	&& curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py \
-	&& curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - \
-	&& echo "deb https://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
-	&& apt-get update && apt-get install -y \
-	google-chrome-beta \
-	fontconfig \
-	fonts-ipafont-gothic \
-	fonts-wqy-zenhei \
-	fonts-thai-tlwg \
-	fonts-kacst \
-	fonts-symbola \
-	fonts-noto \
-	fonts-freefont-ttf \
-	--no-install-recommends \
-	&& apt-get purge --auto-remove -y curl gnupg \
-	&& rm -rf /var/lib/apt/lists/* 
+RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
+RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
 
-RUN pip3 install --upgrade pip \
-	&& pip3 install -r requirements.txt
+# Install deps + add Chrome Stable
+RUN apt-get -y update \
+	&& apt-get install -y \
+	google-chrome-stable \
+	unzip
 
-# Add Chrome as a user
-RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
-	&& mkdir -p /home/chrome && chown -R chrome:chrome /home/chrome \
-	&& mkdir -p /opt/google/chrome-beta && chown -R chrome:chrome /opt/google/chrome-beta
+RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/ \
+	&& curl -sS chromedriver.storage.googleapis.com/LATEST_RELEASE/chromedriver_linux64.zip \
+	&& unzip /tmp/chromedriver.zip chromedriver -d /usr/app/bin/
+
+RUN pip install --upgrade pip \
+	&& pip install -r requirements.txt
 
 # Add python user
 RUN addgroup --gid 1024 pyuser \
@@ -52,4 +33,4 @@ USER pyuser
 EXPOSE 80
 
 # Autorun app
-CMD [ "python3", "./src/app.py"]
+CMD [ "python", "./src/app.py"]
