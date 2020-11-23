@@ -5,7 +5,7 @@ LABEL name="Api with selenium" \
 
 WORKDIR /src
 
-COPY ..
+COPY . .
 
 # Install deps + add Chrome Stable + purge all the things
 RUN apt-get update && apt-get install -y \
