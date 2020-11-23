@@ -76,12 +76,12 @@ class Api:
                 # Main function for the process
                 data = self.web.get_taxpayer_data([input_data['rut'], input_data['validationDigit']])
 
-                if data is not None and not isinstance(data, str):
+                if data is not None and not isinstance(data, Exception):
                     # This trigger when the RUT is not valid
                     logging.info('Data input not valid.')
                     response = self.api.response_class(response=dumps(data), status=200, mimetype='application/json')
                 
-                elif isinstance(data, str):
+                elif isinstance(data, Exception):
                     response = self.api.response_class(response=dumps({'success': False, 'message': data}),
                                                        status=406, mimetype='application/json')
 
