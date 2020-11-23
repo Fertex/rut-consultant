@@ -44,7 +44,8 @@ RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
 
 # Add python user
 RUN addgroup --gid 1024 pyuser \
-	&& adduser --disabled-password --gecos "" --force-badname --gid 1024 pyuser 
+	&& adduser --disabled-password --gecos "" --force-badname --gid 1024 pyuser \
+	&& chown -R pyuser /usr/app
 USER pyuser
 
 # Expose port 80
