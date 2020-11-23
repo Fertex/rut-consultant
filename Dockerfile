@@ -41,8 +41,11 @@ RUN pip3 install --upgrade pip \
 RUN groupadd -r chrome && useradd -r -g chrome -G audio,video chrome \
 	&& mkdir -p /home/chrome && chown -R chrome:chrome /home/chrome \
 	&& mkdir -p /opt/google/chrome-beta && chown -R chrome:chrome /opt/google/chrome-beta
-# Run Chrome non-privileged
-USER chrome
+
+# Add python user
+RUN groupadd --gid 1024 pyadmins \
+	&& useradd --disabled-password --gecos "" --force-badname --ingroup 1024 pyuser 
+USER pyuser
 
 # Expose port 4000
 EXPOSE 4000
