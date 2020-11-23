@@ -65,7 +65,11 @@ class WebActions:
         }
 
         # Local database filled with solutions for captchas
-        db = DbDriver('SQLite', path.join(self.base_path, r'resources/capchas.db'))
+        try: 
+            db = DbDriver('SQLite', path.join(self.base_path, r'/resources/capchas.db'))
+        except Exception as ex:
+            logging.error('Something fail over local db')
+            return ex
         # Constants used by the web session
         main_url = 'https://zeus.sii.cl/cvc/stc/stc.html'
         data_url = 'https://zeus.sii.cl/cvc_cgi/stc/getstc'

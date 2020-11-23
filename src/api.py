@@ -41,7 +41,7 @@ class Api:
                     token = ''.join((choice(chars + str(i))) for i in range(190))
 
                 response = self.api.response_class(response=dumps({'success': True, 'token': token}),
-                                                   status=406, mimetype='application/json')
+                                                   status=200, mimetype='application/json')
 
             except AssertionError:
                 response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid input'}),
@@ -76,10 +76,14 @@ class Api:
                 # Main function for the process
                 data = self.web.get_taxpayer_data([input_data['rut'], input_data['validationDigit']])
 
-                if data is not None:
+                if data is not None and not isinstance(data, str):
                     # This trigger when the RUT is not valid
                     logging.info('Data input not valid.')
                     response = self.api.response_class(response=dumps(data), status=200, mimetype='application/json')
+                
+                elif isinstance(data, str):
+                    response = self.api.response_class(response=dumps({'success': False, 'message': data}),
+                                                       status=406, mimetype='application/json')
 
                 else:
                     response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid rut'}),
