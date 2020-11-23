@@ -5,7 +5,7 @@ from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPresentException
 
-from libs.db_manager import DbDriver
+from .libs.db_manager import DbDriver
 
 
 class WebActions:
