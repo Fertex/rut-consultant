@@ -17,17 +17,15 @@ RUN apt-get -y update \
 	unzip \
 	sqlite3 \
 	libsqlite3-dev
-
 RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/87.0.4280.20/chromedriver_linux64.zip \
 	&& unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
-
 RUN pip install --upgrade pip \
 	&& pip install -r requirements.txt
 
 # Add python user
 RUN addgroup --gid 1024 pyuser \
 	&& adduser --disabled-password --gecos "" --force-badname --gid 1024 pyuser \
-	&& chown -R pyuser /usr/app
+	&& find /usr/app -type d -exec chmod 644 pyuser {} \;
 USER pyuser
 
 # Expose port 4000
