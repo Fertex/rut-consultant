@@ -1,5 +1,4 @@
 import logging
-from os import path
 from time import sleep
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
@@ -65,7 +64,7 @@ class WebActions:
         }
 
         # Local database filled with solutions for captchas
-        db = DbDriver('SQLite', path.join(self.base_path, r'/resources/capchas.db'))
+        db = DbDriver('SQLite', r'./resources/capchas.db')
         # Constants used by the web session
         main_url = 'https://zeus.sii.cl/cvc/stc/stc.html'
         data_url = 'https://zeus.sii.cl/cvc_cgi/stc/getstc'
