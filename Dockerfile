@@ -32,7 +32,7 @@ RUN addgroup --gid 1024 pyuser \
 USER pyuser
 
 # Add db mount dir
-VOLUME db:/usr/app/src/resources
+VOLUME db:./src/resources
 
 # Expose port 4000
 EXPOSE 4000
