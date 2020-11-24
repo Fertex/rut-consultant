@@ -25,7 +25,7 @@ RUN pip install --upgrade pip \
 # Add python user
 RUN addgroup --gid 1024 pyuser \
 	&& adduser --disabled-password --gecos "" --force-badname --gid 1024 pyuser \
-	&& find /usr/app -type d -exec chmod pyuser {} \;
+	&& find /usr/app -type d -exec chmod 644 {} \;
 USER pyuser
 
 # Expose port 4000
