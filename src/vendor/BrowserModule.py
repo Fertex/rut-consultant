@@ -4,7 +4,7 @@ from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPresentException
 
-from .libs.db_manager import DbDriver
+from .resources.db import SOLUTIONS as DB  # Local database filled with solutions for captchas
 
 
 class WebActions:
@@ -63,8 +63,6 @@ class WebActions:
 
         }
 
-        # Local database filled with solutions for captchas
-        db = DbDriver('SQLite', r'./resources/capchas.db')
         # Constants used by the web session
         main_url = 'https://zeus.sii.cl/cvc/stc/stc.html'
         data_url = 'https://zeus.sii.cl/cvc_cgi/stc/getstc'
@@ -81,11 +79,11 @@ class WebActions:
             # Selecting web element which contains the captcha image and obtaining the unique code for solution
             captcha_txt = str(self.session.find_element_by_id('imgcapt').get_attribute('src')).split('txtCaptcha=')[1]
             code = captcha_txt[89:110]
-            solutions = db.get_df_from_table('solutions', f"code='{code}'")  # Searching code in local DB
-
-            if len(solutions['id']) > 0:
+ 
+            # Searching code in local DB
+            if code in DB.keys():
                 # If found, writes the solution and click continue
-                self.session.find_element_by_id('txt_code').send_keys(solutions['solution'])
+                self.session.find_element_by_id('txt_code').send_keys(DB[code])
                 self.session.find_element_by_xpath('//div/input[@name="ACEPTAR"]').click()
                 sleep(1)
 

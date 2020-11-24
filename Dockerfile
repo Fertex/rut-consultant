@@ -5,8 +5,7 @@ LABEL name="Api with selenium" \
 
 WORKDIR /usr/app
 
-COPY src ./src
-COPY requirements.txt .
+COPY . .
 
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
 RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
@@ -15,9 +14,7 @@ RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable 
 RUN apt-get -y update \
 	&& apt-get install -y \
 	google-chrome-stable \
-	unzip \
-	sqlite3 \
-	libsqlite3-dev
+	unzip 
 
 RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/87.0.4280.20/chromedriver_linux64.zip \
 	&& unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
@@ -30,9 +27,6 @@ RUN addgroup --gid 1024 pyuser \
 	&& adduser --disabled-password --gecos "" --force-badname --gid 1024 pyuser \
 	&& chown -R pyuser /usr/app/ 
 USER pyuser
-
-# Add db mount dir
-VOLUME db:./src/resources
 
 # Expose port 4000
 EXPOSE 4000
