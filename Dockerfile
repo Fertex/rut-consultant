@@ -5,7 +5,7 @@ LABEL name="Api with selenium" \
 
 WORKDIR /usr/app
 
-COPY /src .
+COPY src /src
 COPY requirements.txt .
 
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
