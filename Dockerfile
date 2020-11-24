@@ -14,7 +14,9 @@ RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable 
 RUN apt-get -y update \
 	&& apt-get install -y \
 	google-chrome-stable \
-	unzip
+	unzip \
+	sqlite3 \
+	libsqlite3-dev
 
 RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/87.0.4280.20/chromedriver_linux64.zip \
 	&& unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
