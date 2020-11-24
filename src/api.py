@@ -74,22 +74,16 @@ class Api:
                 # Verification of correct input for the request
                 assert 'rut' in input_data.keys() and 'validationDigit' in input_data.keys()
                 # Main function for the process
-                data = None
-                try:
-                    data = self.web.get_taxpayer_data([input_data['rut'], input_data['validationDigit']])
+                data = self.web.get_taxpayer_data([input_data['rut'], input_data['validationDigit']])
 
-                    if data is not None:
-                        # This trigger when the RUT is not valid
-                        logging.info('Data input not valid.')
-                        response = self.api.response_class(response=dumps(data), status=200, mimetype='application/json')
+                if data is not None:
+                    # This trigger when the RUT is not valid
+                    logging.info('Data input not valid.')
+                    response = self.api.response_class(response=dumps(data), status=200, mimetype='application/json')
 
-                    else:
-                        response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid rut'}),
-                                                        status=406, mimetype='application/json')
-
-                except Exception as ex:
-                    response = self.api.response_class(response=dumps({'success': False, 'message': str(ex)}),
-                                                       status=406, mimetype='application/json')
+                else:
+                    response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid rut'}),
+                                                    status=406, mimetype='application/json')
 
             except AssertionError:
                 logging.info('Data input not valid.')
