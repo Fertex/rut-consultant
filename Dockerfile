@@ -5,7 +5,8 @@ LABEL name="Api with selenium" \
 
 WORKDIR /usr/app
 
-COPY . .
+COPY /src .
+COPY requirements.txt .
 
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
 RUN sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list'
@@ -27,9 +28,11 @@ RUN pip install --upgrade pip \
 # Add python user
 RUN addgroup --gid 1024 pyuser \
 	&& adduser --disabled-password --gecos "" --force-badname --gid 1024 pyuser \
-	&& chown -R pyuser /usr/app/ \
-	&& chown -R pyuser ./src/resources
+	&& chown -R pyuser /usr/app/ 
 USER pyuser
+
+# Add db mount dir
+VOLUME db:/usr/app/src/resources
 
 # Expose port 4000
 EXPOSE 4000
