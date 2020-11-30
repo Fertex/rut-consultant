@@ -1,12 +1,11 @@
-import os
 import logging
 from json import dumps
 from random import choice
 from flask import Flask, request
+from itsdangerous import BadSignature
 from flask_httpauth import HTTPTokenAuth
 from string import ascii_letters, digits
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from itsdangerous import BadSignature
 
 import config as conf
 from vendor.BrowserModule import WebActions
@@ -19,14 +18,14 @@ class Api:
     auth = HTTPTokenAuth('Bearer')
 
     def __init__(self):
-        self.web = WebActions(conf.DRIVER_PATH, os.getcwd())
+        self.web = WebActions(conf.DRIVER_PATH)
         logging.info('Web service initialized')
         self.token_gen = Serializer(conf.APP_SECRET, conf.TTE)
         logging.info('Token generator initialized')
 
     def serve(self):
         # Route for login (needed for authentication)
-        @self.api.route('/api/sing-in', methods=['POST'])
+        @self.api.route('/api/sign-in', methods=['POST'])
         def login():
             input_data = request.get_json()
 
@@ -66,7 +65,7 @@ class Api:
         # Route used to process a rut consult in the web portal
         @self.api.route('/api/consult-rut', methods=['POST'])
         @self.auth.login_required()
-        def consult():
+        def taxpayer():
             logging.info(f'App invoked. data = [user: "{self.auth.current_user()}", route: "/consult-rut"]')
             input_data = request.get_json()
 
@@ -77,13 +76,51 @@ class Api:
                 data = self.web.get_taxpayer_data([input_data['rut'], input_data['validationDigit']])
 
                 if data is not None:
-                    # This trigger when the RUT is not valid
-                    logging.info('Data input not valid.')
                     response = self.api.response_class(response=dumps(data), status=200, mimetype='application/json')
 
                 else:
+                    # This trigger when the RUT is not valid
+                    logging.info('Data input not valid.')
                     response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid rut'}),
-                                                    status=406, mimetype='application/json')
+                                                       status=406, mimetype='application/json')
+
+            except AssertionError:
+                logging.info('Data input not valid.')
+                response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid input'}),
+                                                   status=406, mimetype='application/json')
+
+            return response  # Sending result to the client
+
+        # Route used to process a run consult in the web portal
+        @self.api.route('/api/certificates', methods=['POST'])
+        @self.auth.login_required()
+        def certificates():
+            logging.info(f'App invoked. data = [user: "{self.auth.current_user()}", route: "/certificates-consult"]')
+            input_data = request.get_json()
+
+            try:
+                # Verification of correct input for the request
+                assert 'run' in input_data.keys() and 'validationDigit' in input_data.keys()
+                # Main function for the process
+                data = self.web.get_certificates_by_run([input_data['run'], input_data['validationDigit']])
+
+                if data is not None:
+                    if data == 'NORUN':
+                        # This trigger when invalid RUN given or no result obtained from portal
+                        logging.info('Data input not valid.')
+                        response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid RUN'}),
+                                                           status=406, mimetype='application/json')
+
+                    else:
+                        response = self.api.response_class(response=dumps(data), status=200,
+                                                           mimetype='application/json')
+
+                else:
+                    # This trigger when something went wrong in the process
+                    logging.error('Something happened and aborted /certificates process.')
+                    response = self.api.response_class(response=dumps({'success': False,
+                                                                       'message': 'Something went wrong'}),
+                                                       status=406, mimetype='application/json')
 
             except AssertionError:
                 logging.info('Data input not valid.')
@@ -93,4 +130,4 @@ class Api:
             return response  # Sending result to the client
 
         logging.info('Application served.')
-        self.api.run(host='0.0.0.0', port=conf.SERVING_PORT)
+        self.api.run(port=conf.SERVING_PORT)

@@ -1,7 +1,11 @@
+import json
 import logging
+import requests
 from time import sleep
-from selenium.webdriver import Chrome, ChromeOptions
+from datetime import datetime
+from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
+from selenium.webdriver import Chrome, ChromeOptions
 from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPresentException
 
 from .resources.db import SOLUTIONS as DB  # Local database filled with solutions for captchas
@@ -9,12 +13,11 @@ from .resources.db import SOLUTIONS as DB  # Local database filled with solution
 
 class WebActions:
 
-    def __init__(self, driver_exe, base_path):
+    def __init__(self, driver_exe):
         web_options = ChromeOptions()
         web_options.add_argument("--headless")
         web_options.add_argument('--disable-gpu')
         web_options.add_argument('--no-sandbox')
-        self.base_path = base_path
 
         if driver_exe == '':
             self.session = Chrome(options=web_options)
@@ -79,7 +82,7 @@ class WebActions:
             # Selecting web element which contains the captcha image and obtaining the unique code for solution
             captcha_txt = str(self.session.find_element_by_id('imgcapt').get_attribute('src')).split('txtCaptcha=')[1]
             code = captcha_txt[89:110]
- 
+
             # Searching code in local DB
             if code in DB.keys():
                 # If found, writes the solution and click continue
@@ -164,4 +167,161 @@ class WebActions:
                 row_available = False
 
         output['ActividadesEconomicas'] = table_data  # It stores the table in the JSON output variable
+        return output
+
+    @staticmethod
+    def get_certificates_by_run(input_data: list):
+        # Initialization fo the process, constants, structures and variables
+        profile_struct = {  # It defines the structure of the profile cells
+            'codigo': {  # JSON key used in the output
+                'as': 'str'  # Native python type for the value
+            },
+
+            'nombre': {
+                'as': 'str'
+            },
+
+            'anhoCertificación': {
+                'as': 'int'
+            }
+
+        }
+
+        capabilities_struct = {  # It defines the structure of the capabilities cells
+            'codigo': {  # JSON key used in the output
+                'as': 'str',  # Native python type for the value
+                'get': 'text',  # HTML property which allocates the value
+                'from': 'base'  # HTML tag needed
+            },
+
+            'nombre': {
+                'as': 'str',
+                'get': 'text',
+                'from': 'base'
+            },
+
+            'fechaAcreditacion': {
+                'as': 'date;%d/%m/%Y;%Y%m%dT00:00:00',
+                'get': 'text',
+                'from': 'div'
+            },
+
+            'competencia': {
+                'as': 'bool',
+                'trueif': 'COMPETENTE',
+                'get': 'title',
+                'from': 'img'
+            }
+
+        }
+        # urls and headers needed to obtain data from the web portal
+        id_url = 'https://certificacion.chilevalora.cl/ChileValora-publica/candidatosPublicListTable.html?' \
+                 'iDisplayStart=0&iDisplayLength=10&sSearch={}&sSortDir_0=asc'
+        id_headers = {'Accept-Encoding': 'gzip, deflate, br',
+                      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8'}
+        main_url = 'https://certificacion.chilevalora.cl/ChileValora-publica/candidatosEdit.html?paramRequest={}'
+        pdf_url = 'https://certificacion.chilevalora.cl/ChileValora-publica/candidatosExportarPDF.html?paramRequest={}'
+        output = None
+
+        # Starting request process to obtain data
+        run = input_data[0] + '-' + input_data[1]
+        id_response = requests.get(id_url.format(run), headers=id_headers)  # Obtaining local id from RUN
+        if id_response.status_code == 200:
+            id_data = json.loads(id_response.text)['aaData']
+
+            if len(id_data) > 0:  # If the response was ok and a person was detected, the process continues
+                main_response = requests.get(main_url.format(id_data[0][0]))
+
+                # Starting to search the data from the local id given from the web portal
+                if main_response.status_code == 200:
+                    output = {}
+                    html = BeautifulSoup(main_response.text, "html.parser")
+                    output['run'] = run  # Adding RUN to output JSON
+                    output['nombreCompleto'] = html.find_all(
+                        'table', class_='TablaDoc')[0].find('td', class_='col-xs-8').text  # Adding name to output JSON
+                    output['pdf'] = pdf_url.format(id_data[0][0])
+                    table_rows = html.find('table', id='resultados').select('thead td')  # Selecting rows of info table
+
+                    # Starting formatting of profiles data
+                    profile_data = []
+                    row = {}
+                    i = 0
+                    for cell in table_rows:
+                        # Giving native type to the value
+                        if profile_struct[list(profile_struct.keys())[i]].get('as') == 'int':
+                            value = int(cell.text.replace('\r', '').replace('\n', '').replace('\t', '').strip())
+
+                        else:
+                            value = cell.text.replace('\r', '').replace('\n', '').replace('\t', '').strip()
+
+                        if i == 0 and 'U-' in value:
+                            break  # It triggers when the row is not from the profile section
+
+                        row[list(profile_struct.keys())[i]] = value  # Adding value in a row for JSON array
+                        i += 1
+
+                        if i > 0 and i % len(profile_struct.keys()) == 0:  # Resetting row when many profiles detected
+                            profile_data.append(row)  # Adding row in an array
+                            i = 0
+                            row = {}
+
+                    output['perfiles'] = profile_data  # Adding profiles array to JSON output
+
+                    # Starting formatting of capabilities data
+                    cell_count = 0
+                    capabilities_data = []
+                    for j in range(len(profile_data)*len(profile_struct.keys()), len(table_rows)):
+                        cell_struct = capabilities_struct[list(capabilities_struct.keys())[cell_count]]
+
+                        # Searching for the HTML element which allocates required data
+                        if cell_struct.get('from') == 'base':
+                            element = table_rows[j]
+
+                        else:
+                            element = table_rows[j].find(cell_struct.get('from'))
+
+                        # Obtaining text from the particular HTML attribute
+                        if element is None:
+                            text = ''
+
+                        elif cell_struct.get('get') == 'text':
+                            text = element.text.replace('\r', '').replace('\n', '').replace('\t', '').strip()
+
+                        else:
+                            text = element.attrs[cell_struct.get('get')]
+
+                        # Giving native type to the value
+                        if cell_struct.get('as') == 'bool':
+                            if text == '':
+                                value = False
+                            else:
+                                value = True if cell_struct.get('trueif') in text else False
+
+                        elif 'date' in cell_struct.get('as'):
+                            if text == '':
+                                value = ''
+                            else:
+                                value = datetime.strptime(text, cell_struct.get('as').split(';')[1]).date().strftime(
+                                    cell_struct.get('as').split(';')[2])
+
+                        else:
+                            value = text
+
+                        # Adding value in a row for JSON array
+                        row[list(capabilities_struct.keys())[cell_count]] = value
+                        cell_count += 1
+
+                        # Resetting row when many capabilities detected
+                        if cell_count > 0 and cell_count % len(capabilities_struct.keys()) == 0:
+                            capabilities_data.append(row)  # Adding row in an array
+                            row = {}
+                            cell_count = 0
+
+                    output['competencias'] = capabilities_data  # Adding capabilities array to JSON output
+
+            else:
+                # It triggers when no id was detected meaning that the RUN is wrong or the data is not in the portal
+                logging.info('RUN response was empty.')
+                return 'NORUN'
+
         return output
