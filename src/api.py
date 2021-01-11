@@ -130,4 +130,4 @@ class Api:
             return response  # Sending result to the client
 
         logging.info('Application served.')
-        self.api.run(port=conf.SERVING_PORT)
+        self.api.run(host='0.0.0.0', port=conf.SERVING_PORT)

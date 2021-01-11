@@ -12,9 +12,9 @@ def setup_log():
     
     stdout_handler = logging.StreamHandler(sys.stdout)
 
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(name)s - %(levelname)s - %(message)s',
-                        handlers=[file_handler, stdout_handler])
+    logging.basicConfig(handlers=[file_handler, stdout_handler],
+                        level=logging.DEBUG,
+                        format='%(name)s - %(levelname)s - %(message)s')
     logging.debug("Setup was initialized")
 
 
