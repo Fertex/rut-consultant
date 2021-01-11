@@ -325,3 +325,63 @@ class WebActions:
                 return 'NORUN'
 
         return output
+
+    @staticmethod
+    def get_certificates_by_rut(input_data: list):
+        # urls and headers needed to obtain data from the web portal
+        main_url = 'https://www.registrodeempresasysociedades.cl/ObtenerCertificadosHome.aspx'
+        data_url_template = \
+            'https://www.registrodeempresasysociedades.cl/Certificados/Generar.aspx?certRut={}&certTipo={}'
+        data_headers = {'Accept-Encoding': 'gzip, deflate, br'}
+
+        # Initializing data variables and output
+        rut = input_data[0]
+        option_data = {}
+        output = None
+
+        # Obtaining data from the main portal in order to map the output array
+        main_response = requests.get(main_url)
+        if main_response.status_code == 200:
+            main_page = BeautifulSoup(main_response.text, "html.parser")
+            options = main_page.find_all('option')  # Getting number of available certificates and theirs names
+
+            for i in range(1, len(options)):
+                option_data[i] = options[i].text
+
+        # Obtaining the certificate document (PDF) of every available type
+        certificates = []
+        for certificate in option_data.items():
+            certificate_data = {'Tipo': certificate[1]}  # Formatting the output JSON
+            data_url = data_url_template.format(rut, certificate[0])
+            try:
+                # Obtaining the HTTP response with the document
+                data_response = requests.get(data_url, headers=data_headers)
+
+            except Exception as response_ex:
+                logging.debug(response_ex)
+                return output
+
+            if data_response.status_code == 200:
+                html = BeautifulSoup(data_response.text, "html.parser")
+
+                if 'PDF' in html.text:
+                    # When PDF data available on the response, add this url to the JSON object
+                    certificate_data['Url'] = data_url
+
+                elif 'no es válido' in html.find('span', id='boxer_content_lblBajada').text:
+                    # When the web portal response with no dta of the RUT, notify it
+                    output = 'NORUT'
+                    break
+
+                else:
+                    # When PDF NO data available on the response, add a notification to the JSON object
+                    certificate_data['Url'] = 'No disponible'
+
+                # Add the certificate data to the output array
+                certificates.append(certificate_data)
+
+            # Validating that the output still free and no wrong status occurred
+            if output is None:
+                output = {'Rut': rut, 'Certificados': certificates}
+
+        return output
