@@ -1,4 +1,4 @@
-__version__ = 0.2
+__version__ = 1.4
 import logging
 
 from src.api import Api
