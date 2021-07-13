@@ -1,1 +1,5 @@
-/.idea
+.idea
+/src/config.py
+/src/app.py
+
+**.log
