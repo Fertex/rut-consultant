@@ -1,7 +1,7 @@
 __version__ = 1.4
 import logging
 
-from src.api import Api
+from api import Api
 
 
 def setup_log():
