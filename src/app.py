@@ -5,9 +5,14 @@ from src.api import Api
 
 
 def setup_log():
-    logging.basicConfig(filename="log.log",
+    file_handler = logging.FileHandler(filename="log.log",
+                                       mode='w',
+                                       encoding='utf-8')
+    
+    stdout_handler = logging.StreamHandler(sys.stdout)
+
+    logging.basicConfig(handlers=[file_handler, stdout_handler],
                         level=logging.DEBUG,
-                        filemode='w',
                         format='%(name)s - %(levelname)s - %(message)s')
     logging.debug("Setup was initialized")
 
