@@ -169,51 +169,6 @@ class Api:
 
             return response  # Sending result to the client
 
-        # Route used to consult judicial orders
-        @self.api.route('/api/judicial-consult', methods=['POST'])
-        @self.auth.login_required()
-        def judicial_consult():
-            logging.info(
-                f'App invoked. data = [user: "{self.auth.current_user()}", route: "/judicial-consult"]')
-            input_data = request.get_json()
-
-            try:
-                # Verification of correct input for the request and making a valid input array
-                assert 'rut' in input_data.keys()
-                input_array = [
-                    input_data['rut'],
-                    input_data['estadoCausa'] if 'estadoCausa' in input_data.keys() else None,
-                    input_data['tribunal'] if 'tribunal' in input_data.keys() else None
-                ]
-
-                # Main function for the process
-                data = self.web.get_judicial_orders(input_array)
-                if data is not None:
-                    if data == 'NORUT':
-                        # This trigger when invalid RUT given or no result obtained from portal
-                        logging.info('Data input not valid.')
-                        response = self.api.response_class(
-                            response=dumps({'success': False, 'message': 'Invalid RUT'}),
-                            status=406, mimetype='application/json')
-
-                    else:
-                        response = self.api.response_class(response=dumps(data), status=200,
-                                                           mimetype='application/json')
-
-                else:
-                    # This trigger when something went wrong in the process
-                    logging.error('Something happened and aborted /judicial-consult.')
-                    response = self.api.response_class(response=dumps({'success': False,
-                                                                       'message': 'Something went wrong'}),
-                                                       status=406, mimetype='application/json')
-
-            except AssertionError:
-                logging.info('Data input not valid.')
-                response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid input'}),
-                                                   status=406, mimetype='application/json')
-
-            return response  # Sending result to the client
-
         logging.info('Application served.')
         if conf.SERVING_HOST is not None:
             self.api.run(host=conf.SERVING_HOST, port=conf.SERVING_PORT)
