@@ -8,6 +8,7 @@ from string import ascii_letters, digits
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 import config as conf
+from vendor import PdfModule
 from vendor.BrowserModule import WebActions
 
 
@@ -18,7 +19,7 @@ class Api:
     auth = HTTPTokenAuth('Bearer')
 
     def __init__(self):
-        self.web = WebActions(conf.DRIVER_PATH)
+        self.web = WebActions(conf.DRIVER_PATH, conf.USER_AGENT)
         logging.info('Web service initialized')
         self.token_gen = Serializer(conf.APP_SECRET, conf.TTE)
         logging.info('Token generator initialized')
@@ -164,6 +165,37 @@ class Api:
 
             except AssertionError:
                 logging.info('Data input not valid.')
+                response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid input'}),
+                                                   status=406, mimetype='application/json')
+
+            return response  # Sending result to the client
+
+        # Route used to process a rut download of certificates on the web portal
+        @self.api.route('/api/covid-pdf', methods=['POST'])
+        @self.auth.login_required()
+        def covid_pdf():
+            logging.info(
+                f'App invoked. data = [user: "{self.auth.current_user()}", route: "/covid-pdf"]')
+            input_data = request.files
+
+            try:
+                # Verification of correct input for the request
+                assert 'file' in input_data.keys() and input_data['file'].filename != ''
+                # Main function for the process
+                data = PdfModule.process_vaccine_pdf(input_data['file'], self.web)
+
+                if data is not None:
+                    response = self.api.response_class(response=dumps(data), status=200, mimetype='application/json')
+
+                else:
+                    # This trigger when something went wrong in the process
+                    logging.error('Something happened and aborted /download-certificates process.')
+                    response = self.api.response_class(response=dumps({'success': False,
+                                                                       'message': 'Something went wrong'}),
+                                                       status=406, mimetype='application/json')
+
+            except AssertionError:
+                logging.info('Input file not found.')
                 response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid input'}),
                                                    status=406, mimetype='application/json')
 

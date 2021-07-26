@@ -1,13 +1,11 @@
 import json
 import logging
 import requests
-from math import ceil
 from time import sleep
 from datetime import datetime
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome, ChromeOptions
-from selenium.common.exceptions import ElementNotInteractableException, StaleElementReferenceException
 from selenium.common.exceptions import NoSuchElementException, UnexpectedAlertPresentException
 
 from .resources.db import SOLUTIONS as DB  # Local database filled with solutions for captchas
@@ -15,11 +13,13 @@ from .resources.db import SOLUTIONS as DB  # Local database filled with solution
 
 class WebActions:
 
-    def __init__(self, driver_exe):
+    def __init__(self, driver_exe, agent):
         web_options = ChromeOptions()
         web_options.add_argument("--headless")
         web_options.add_argument('--disable-gpu')
         web_options.add_argument('--no-sandbox')
+        web_options.add_argument('disable-blink-features=AutomationControlled')
+        web_options.add_argument(f'user-agent={agent}')
 
         if driver_exe == '':
             self.session = Chrome(options=web_options)
@@ -387,3 +387,39 @@ class WebActions:
                 output = {'Rut': rut, 'Certificados': certificates}
 
         return output
+
+    def get_qr_page(self, web_page):
+        # Initializing output variable and main url
+        web_data = {}
+        main_url = 'https://scanmevacuno.gob.cl/'
+
+        # Opening web page obtained from QR
+        self.session.get(web_page)
+
+        # Wait for page to be fully loaded
+        page_loaded = False
+        while not page_loaded:
+            if self.session.current_url == main_url:
+                page_loaded = True
+            sleep(1)
+
+        # Search for web elements that contained required data
+        web_data['habilitado'] = True if self.session.find_element_by_xpath('//h1').text == 'HABILITADO' else False
+        person_info = self.session.find_elements_by_xpath('//div[contains(@class, "identidad")]/div')
+
+        # Reading info from web page
+        if len(person_info) > 0:
+            web_data['nombre'] = person_info[-1].text + ' ' + person_info[1].text
+            web_data['documento'] = person_info[0].text
+
+            # If no data found return a valid format but eith null values
+            if web_data['nombre'] == ' ' and web_data['documento'] == '':
+                web_data['nombre'] = None
+                web_data['documento'] = None
+                web_data['detalle'] = 'Error interno del portal, no se pudo obtener información'
+
+            else:
+                web_data['detalle'] = self.session.find_element_by_xpath('//div[contains(@class, "explica")]').text
+
+        return web_data
+
