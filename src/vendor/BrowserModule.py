@@ -422,3 +422,4 @@ class WebActions:
                 web_data['detalle'] = self.session.find_element_by_xpath('//div[contains(@class, "explica")]').text
 
         return web_data
+
