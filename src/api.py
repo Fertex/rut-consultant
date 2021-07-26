@@ -7,8 +7,9 @@ from flask_httpauth import HTTPTokenAuth
 from string import ascii_letters, digits
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
-import config as conf
-from vendor.BrowserModule import WebActions
+import src.config as conf
+from src.vendor import PdfModule
+from src.vendor.BrowserModule import WebActions
 
 
 class Api:
@@ -18,7 +19,7 @@ class Api:
     auth = HTTPTokenAuth('Bearer')
 
     def __init__(self):
-        self.web = WebActions(conf.DRIVER_PATH)
+        self.web = WebActions(conf.DRIVER_PATH, conf.USER_AGENT)
         logging.info('Web service initialized')
         self.token_gen = Serializer(conf.APP_SECRET, conf.TTE)
         logging.info('Token generator initialized')
@@ -169,46 +170,32 @@ class Api:
 
             return response  # Sending result to the client
 
-        # Route used to consult judicial orders
-        @self.api.route('/api/judicial-consult', methods=['POST'])
+        # Route used to process a rut download of certificates on the web portal
+        @self.api.route('/api/covid-pdf', methods=['POST'])
         @self.auth.login_required()
-        def judicial_consult():
+        def covid_pdf():
             logging.info(
-                f'App invoked. data = [user: "{self.auth.current_user()}", route: "/judicial-consult"]')
-            input_data = request.get_json()
+                f'App invoked. data = [user: "{self.auth.current_user()}", route: "/covid-pdf"]')
+            input_data = request.files
 
             try:
-                # Verification of correct input for the request and making a valid input array
-                assert 'rut' in input_data.keys()
-                input_array = [
-                    input_data['rut'],
-                    input_data['estadoCausa'] if 'estadoCausa' in input_data.keys() else None,
-                    input_data['tribunal'] if 'tribunal' in input_data.keys() else None
-                ]
-
+                # Verification of correct input for the request
+                assert 'file' in input_data.keys() and input_data['file'].filename != ''
                 # Main function for the process
-                data = self.web.get_judicial_orders(input_array)
-                if data is not None:
-                    if data == 'NORUT':
-                        # This trigger when invalid RUT given or no result obtained from portal
-                        logging.info('Data input not valid.')
-                        response = self.api.response_class(
-                            response=dumps({'success': False, 'message': 'Invalid RUT'}),
-                            status=406, mimetype='application/json')
+                data = PdfModule.process_vaccine_pdf(input_data['file'], self.web)
 
-                    else:
-                        response = self.api.response_class(response=dumps(data), status=200,
-                                                           mimetype='application/json')
+                if data is not None:
+                    response = self.api.response_class(response=dumps(data), status=200, mimetype='application/json')
 
                 else:
                     # This trigger when something went wrong in the process
-                    logging.error('Something happened and aborted /judicial-consult.')
+                    logging.error('Something happened and aborted /download-certificates process.')
                     response = self.api.response_class(response=dumps({'success': False,
                                                                        'message': 'Something went wrong'}),
                                                        status=406, mimetype='application/json')
 
             except AssertionError:
-                logging.info('Data input not valid.')
+                logging.info('Input file not found.')
                 response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid input'}),
                                                    status=406, mimetype='application/json')
 
