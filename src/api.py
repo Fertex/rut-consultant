@@ -7,9 +7,9 @@ from flask_httpauth import HTTPTokenAuth
 from string import ascii_letters, digits
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
-import src.config as conf
-from src.vendor import PdfModule
-from src.vendor.BrowserModule import WebActions
+import config as conf
+from vendor import PdfModule
+from vendor.BrowserModule import WebActions
 
 
 class Api:
