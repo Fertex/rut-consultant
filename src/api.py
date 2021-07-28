@@ -170,7 +170,7 @@ class Api:
 
             return response  # Sending result to the client
 
-        # Route used to process a rut download of certificates on the web portal
+        # Route used to process a covid document an check it's QR code
         @self.api.route('/api/covid-pdf', methods=['POST'])
         @self.auth.login_required()
         def covid_pdf():
@@ -189,13 +189,60 @@ class Api:
 
                 else:
                     # This trigger when something went wrong in the process
-                    logging.error('Something happened and aborted /download-certificates process.')
+                    logging.error('Something happened and aborted /covid-pdf process.')
                     response = self.api.response_class(response=dumps({'success': False,
                                                                        'message': 'Something went wrong'}),
                                                        status=406, mimetype='application/json')
 
             except AssertionError:
                 logging.info('Input file not found.')
+                response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid input'}),
+                                                   status=406, mimetype='application/json')
+
+            return response  # Sending result to the client
+
+        # Route used to process a rut download of certificates on the web portal
+        @self.api.route('/api/covid-insurance', methods=['POST'])
+        @self.auth.login_required()
+        def covid_insurance():
+            logging.info(
+                f'App invoked. data = [user: "{self.auth.current_user()}", route: "/covid-insurance"]')
+            input_data = request.get_json()
+
+            try:
+                # Verification of correct input for the request
+                assert 'rut' in input_data.keys()
+                # Main function for the process
+                data = self.web.get_covid_insurance([input_data['rut']])
+
+                if data:
+                    if data == 'NORUN':
+                        # This trigger when invalid RUN given or no result obtained from portal
+                        logging.info('Data input not valid.')
+                        response = self.api.response_class(
+                            response=dumps({'success': False, 'message': 'Invalid RUN'}),
+                            status=406, mimetype='application/json')
+
+                    elif data == 'NOTFOUND':
+                        # This trigger when valid RUN but was not found when consulting
+                        logging.info('Data input not found in portal.')
+                        response = self.api.response_class(
+                            response=dumps({'success': False, 'message': 'Run info not found'}),
+                            status=404, mimetype='application/json')
+
+                    else:
+                        response = self.api.response_class(response=dumps(data), status=200,
+                                                           mimetype='application/json')
+
+                else:
+                    # This trigger when something went wrong in the process
+                    logging.error('Something happened and aborted /covid-insurance process.')
+                    response = self.api.response_class(response=dumps({'success': False,
+                                                                       'message': 'Something went wrong'}),
+                                                       status=406, mimetype='application/json')
+
+            except AssertionError:
+                logging.info('Data input not valid.')
                 response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid input'}),
                                                    status=406, mimetype='application/json')
 
