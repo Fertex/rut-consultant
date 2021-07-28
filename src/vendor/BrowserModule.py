@@ -423,3 +423,86 @@ class WebActions:
 
         return web_data
 
+    def get_covid_insurance(self, input_data: list):
+        # Defining main url for the process
+        main_url = 'https://covid.aach.cl/'
+
+        # Initializing data variables and output
+        run = input_data[0]
+        output = {}
+        data_fields = {  # This dict contains as keys the id from the field in portal and as name the JSON output field
+            "Rut": {
+                'name': 'rut',
+                'value': ''
+            },
+            "Nombre": {
+                'name': 'nombre',
+                'value': ''
+            },
+            "Poliza": {
+                'name': 'poliza',
+                'value': ''
+            },
+            "CiaAseguradora": {
+                'name': 'aseguradora',
+                'value': ''
+            },
+            "FechaIni": {
+                'name': 'fechaInicio',
+                'value': ''
+            },
+            "FechaFin": {
+                'name': 'fechaFinal',
+                'value': ''
+            },
+        }
+
+        # Opening the web page and filling up the RUN field
+        self.session.get(main_url)
+        self.session.find_element_by_xpath('//input[contains(@id, "Run")]').send_keys(run)
+
+        # Searching for alerts form portal, if not detected continue
+        alerts = self.session.find_elements_by_xpath(
+            '//div[contains(@id, "master")]//div[contains(@style, "block")]/div/small')
+        if len(alerts) > 0:
+            # If invalid run then stop process and send back an alert
+            if 'incorrecto' in alerts[0].text:
+                return 'NORUN'
+
+        # Wait before consulting then click the button
+        sleep(2.5)
+        self.session.find_element_by_xpath('//a[contains(@id, "consultar")]').click()
+
+        # Search for portal errors, if not detected continue
+        portal_errors = self.session.find_elements_by_xpath('//div[contains(@id, "Error")]')
+        if len(portal_errors) > 0:
+            error_txt = self.session.find_element_by_xpath('//div[contains(@id, "Error")]//h2').text
+
+            # If RUN info was not found then send back an alert
+            if 'NO SE ENCONTRÓ' in error_txt:
+                output = 'NOTFOUND'
+
+            return output
+
+        # Search the requested data from portal response as ana array of web elements
+        insurance_fields = self.session.find_elements_by_xpath(
+            '//div[contains(@id, "Certificado")]//span[contains(@id, "masterContenido_lbl")]')
+        # Detect field name one by one
+        for field in insurance_fields:
+            field_name = field.get_attribute('id').split('Contenido_lbl')[-1]
+            # If field id is required for the answer, then add it to the data dict
+            if field_name in data_fields.keys():
+                data_fields[field_name]['value'] = field.text
+
+        # Check data obtained from portal that was appended to data dict
+        for index, field in data_fields.items():
+            # If valid data then add it to the output JSON
+            if field.get('value') != '':
+
+                if field.get('name') == 'rut':
+                    output[field.get('name')] = field.get('value').replace('.', '')
+
+                else:
+                    output[field.get('name')] = field.get('value')
+
+        return output
