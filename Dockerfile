@@ -19,7 +19,9 @@ RUN apt-get -y update \
 RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/87.0.4280.20/chromedriver_linux64.zip \
 	&& unzip /tmp/chromedriver.zip chromedriver -d /usr/local/bin/
 
-RUN apt-get install -y dialog apt-utils libzbar0
+# Installing dependencies for pyzbar
+RUN apt-get install -y dialog apt-utils
+RUN apt-get install -y libzbar-dev libzbar0
 
 RUN pip install --upgrade pip \
 	&& pip install -r requirements.txt
