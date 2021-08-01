@@ -5,6 +5,6 @@ selenium==3.141.0
 beautifulsoup4==4.9.3
 requests==2.24.0
 pypng==0.0.20
-pyzbar
 pillow==8.3.1
+pyzbar
 PyMuPDF==1.18.15 --install-option='pillow'
