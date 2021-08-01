@@ -1,5 +1,5 @@
 # Base on docker image https://nander.cc/using-selenium-within-a-docker-container
-FROM python:3.7
+FROM python:3.6
 LABEL name="Api with selenium" \
 	version="1.0" 
 
