@@ -23,9 +23,9 @@ RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/87.
 RUN apt-get install -y dialog apt-utils
 RUN apt-get install -y libzbar0 libzbar-dev
 
-RUN apt-get -y install python3-pip
-RUN pip3 install --upgrade pip \
-	&& pip3 install -r requirements.txt
+RUN pip install pyzbar
+RUN pip install --upgrade pip \
+	&& pip install -r requirements.txt
 
 # Add python user
 RUN addgroup --gid 1024 pyuser \
