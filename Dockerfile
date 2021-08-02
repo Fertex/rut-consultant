@@ -1,5 +1,5 @@
 # Base on docker image https://nander.cc/using-selenium-within-a-docker-container
-FROM python:3.6
+FROM python:3.7
 LABEL name="Api with selenium" \
 	version="1.0" 
 
@@ -23,8 +23,9 @@ RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/87.
 RUN apt-get install -y dialog apt-utils
 RUN apt-get install -y libzbar0 libzbar-dev
 
-RUN pip install --upgrade pip \
-	&& pip install -r requirements.txt
+RUN apt-get -y install python3-pip
+RUN pip3 install --upgrade pip \
+	&& pip3 install -r requirements.txt
 
 # Add python user
 RUN addgroup --gid 1024 pyuser \
