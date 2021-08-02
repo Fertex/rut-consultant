@@ -21,7 +21,7 @@ RUN wget -O /tmp/chromedriver.zip http://chromedriver.storage.googleapis.com/87.
 
 # Installing dependencies for pyzbar
 RUN apt-get install -y dialog apt-utils
-RUN apt-get install -y libzbar-dev libzbar0
+RUN apt-get install -y zbar-tools libzbar-dev libzbar0
 
 RUN pip install --upgrade pip \
 	&& pip install -r requirements.txt
