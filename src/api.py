@@ -198,6 +198,13 @@ class Api:
                 logging.info('Input file not found.')
                 response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid input'}),
                                                    status=406, mimetype='application/json')
+                
+            except Exception as request_error:
+                response = self.api.response_class(response=dumps({
+                    'success': False,
+                    'message': 'Something went wrong',
+                    'error': str(request_error)
+                }), status=501, mimetype='application/json')
 
             return response  # Sending result to the client
 
