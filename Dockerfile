@@ -26,6 +26,7 @@ RUN apt-get install -y libzbar0 libzbar-dev
 RUN pip install pyzbar
 RUN pip install --upgrade pip \
 	&& pip install -r requirements.txt
+RUN pip install PyMuPDF Pillow
 
 # Add python user
 RUN addgroup --gid 1024 pyuser \
