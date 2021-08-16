@@ -6,4 +6,5 @@ beautifulsoup4==4.9.3
 requests==2.24.0
 pypng==0.0.20
 pillow==8.3.1
-PyMuPDF==1.18.15 --install-option='pillow'
+fitz
+PyMuPDF==1.18.15 
