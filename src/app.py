@@ -8,7 +8,7 @@ def setup_log():
     file_handler = logging.FileHandler(filename="log.log",
                                        mode='w',
                                        encoding='utf-8')
-    
+
     stdout_handler = logging.StreamHandler(sys.stdout)
 
     logging.basicConfig(handlers=[file_handler, stdout_handler],

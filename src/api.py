@@ -182,10 +182,18 @@ class Api:
                 # Verification of correct input for the request
                 assert 'file' in input_data.keys() and input_data['file'].filename != ''
                 # Main function for the process
-                data = PdfModule.process_vaccine_pdf(input_data['file'], self.web)
+                data = PdfModule.process_vaccine_pdf(input_data['file'])
 
                 if data is not None:
-                    response = self.api.response_class(response=dumps(data), status=200, mimetype='application/json')
+
+                    if data == 'INVALID':
+                        response = self.api.response_class(response=dumps({
+                            'success': False,
+                            'message': 'Invalid PDF version sent'}
+                        ), status=422, mimetype='application/json')
+
+                    else:
+                        response = self.api.response_class(response=dumps(data), status=200, mimetype='application/json')
 
                 else:
                     # This trigger when something went wrong in the process
@@ -197,7 +205,7 @@ class Api:
             except AssertionError:
                 logging.info('Input file not found.')
                 response = self.api.response_class(response=dumps({'success': False, 'message': 'Invalid input'}),
-                                                   status=406, mimetype='application/json')
+                                                   status=400, mimetype='application/json')
                 
             except Exception as request_error:
                 response = self.api.response_class(response=dumps({
